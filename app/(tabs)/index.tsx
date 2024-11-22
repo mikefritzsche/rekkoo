@@ -1,74 +1,164 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+// app/(tabs)/index.tsx
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  Alert,
+  SafeAreaView,
+} from 'react-native';
+import { router } from 'expo-router';
+import { Feather } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import ThemedHeader from '@/components/ThemedHeader';
+import ThemedButton from '@/components/ThemedButton';
+import ThemedCard from '@/components/ThemedCard';
+import { theme } from '@/app/theme';
+import { STORAGE_KEYS } from '@/constants';
+import {List} from "@/types";
+import { createDefaultLists, createDefaultItems } from '@/data';
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
 
 export default function HomeScreen() {
+  const [lists, setLists] = useState<List[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Initialize default data
+  const initializeDefaultData = async () => {
+    try {
+      const listsWithIds = createDefaultLists();
+      const defaultItemsWithIds = createDefaultItems(listsWithIds);
+
+      await AsyncStorage.setItem(STORAGE_KEYS.LISTS, JSON.stringify(listsWithIds));
+
+      await Promise.all(
+        Object.entries(defaultItemsWithIds).map(([listId, items]) =>
+          AsyncStorage.setItem(STORAGE_KEYS.LIST_ITEMS(listId), JSON.stringify(items))
+        )
+      );
+
+      setLists(listsWithIds);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to initialize default data');
+    }
+  };
+
+  const loadLists = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const storedLists = await AsyncStorage.getItem(STORAGE_KEYS.LISTS);
+      if (storedLists) {
+        setLists(JSON.parse(storedLists));
+      } else {
+        await initializeDefaultData();
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to load lists');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadLists();
+  }, [loadLists]);
+
+  const gradientKeys = Object.keys(theme.colors.gradients) as Array<keyof typeof theme.colors.gradients>;
+
+  // Uncomment this useEffect to populate with default lists
+  useEffect(() => {
+    if (lists.length === 0 && !isLoading) {
+      setLists(defaultLists);
+      AsyncStorage.setItem(STORAGE_KEYS.LISTS, JSON.stringify(defaultLists));
+    }
+  }, [isLoading]);
+
+  const handleCreateList = () => {
+    router.push('/create');
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
+    <SafeAreaView style={styles.container}>
+      <ScrollView style={styles.container}>
+        <ThemedHeader
+          title="My Lists"
+          subtitle={`${lists.length} lists`}
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+
+        <View style={styles.grid}>
+          {lists.map((list, index) => (
+            <ThemedCard
+              key={list.id}
+              style={styles.card}
+              gradient={theme.colors.gradients[list.color]}
+              onPress={() => router.push(`/list/${list.id}`)}
+            >
+              <View style={styles.cardContent}>
+                <View style={styles.cardHeader}>
+                  <Feather name="list" size={24} color="white" />
+                </View>
+                <View style={styles.cardBody}>
+                  <Text style={styles.cardTitle}>{list.title}</Text>
+                  <Text style={styles.cardSubtitle}>
+                    {list.completedCount}/{list.itemCount} completed
+                  </Text>
+                </View>
+              </View>
+            </ThemedCard>
+          ))}
+        </View>
+      </ScrollView>
+
+      <ThemedButton
+        title="Create New List"
+        icon={({ size, color }) => <Feather name="plus" size={size} color={color} />}
+        style={styles.createButton}
+        onPress={handleCreateList}
+      />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
+  },
+  grid: {
+    padding: theme.spacing.md,
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: theme.spacing.md,
+  },
+  card: {
+    width: '47%', // Approximate half width accounting for gap
+    minHeight: 150,
+  },
+  cardContent: {
+    flex: 1,
+    justifyContent: 'space-between',
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 8,
+    marginBottom: theme.spacing.md,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  cardBody: {
+    justifyContent: 'flex-end',
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  cardTitle: {
+    color: theme.colors.text.primary,
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: theme.spacing.xs,
+  },
+  cardSubtitle: {
+    color: theme.colors.text.muted,
+    fontSize: 14,
+  },
+  createButton: {
+    margin: theme.spacing.md,
   },
 });
