@@ -18,7 +18,17 @@ export type ListItem = {
   tags?: string[];
 };
 
+export type ListItemProps = {
+  item: ListItem;
+  listId: string;
+  onPress?: (item: ListItem) => void;
+  onLongPress?: (item: ListItem) => void;
+  onToggle?: (item: ListItem) => void;
+  showDivider?: boolean;
+};
+
 export type ThemedListProps = {
+  itemId: string;
   items: ListItem[];
   onItemPress?: (item: ListItem) => void;
   onItemLongPress?: (item: ListItem) => void;
@@ -72,5 +82,11 @@ export interface AppTheme {
     lg: number;
     full: number;
   };
+}
+
+export interface User {
+  id: string;
+  email: string;
+  lastSyncedAt?: string;
 }
 

@@ -1,11 +1,11 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   StyleSheet,
   Alert,
   KeyboardAvoidingView,
   Platform,
-  Text, TextInput,
+  TextInput, TouchableOpacity,
 } from 'react-native';
 import {router, useLocalSearchParams} from 'expo-router';
 import {Feather} from '@expo/vector-icons';
@@ -14,13 +14,9 @@ import ThemedHeader from '@/components/ThemedHeader';
 import ThemedButton from '@/components/ThemedButton';
 import {useListItems} from '@/hooks/useListItems';
 import {theme} from '@/app/theme';
-import {ListItem} from '@/types';
-
-interface AddItemModalProps {
-  visible: boolean;
-  onClose: () => void;
-  onSubmit: (title: string, description?: string) => void;
-}
+import {List, ListItem} from '@/types';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import {STORAGE_KEYS} from "@/constants";
 
 interface AddItemModalProps {
   visible: boolean;
@@ -91,6 +87,7 @@ const AddItemModal: React.FC<AddItemModalProps> = (
 export default function ListDetailScreen() {
   const params = useLocalSearchParams();
   const listId = typeof params.id === 'string' ? params.id : '';
+  const [list, setList] = useState<List | null>(null);
 
   const {id} = useLocalSearchParams<{ id: string }>();
   const [showAddModal, setShowAddModal] = useState(false);
@@ -105,11 +102,36 @@ export default function ListDetailScreen() {
     clearError,
   } = useListItems(id);
 
-  React.useEffect(() => {
+  // Load list details
+  useEffect(() => {
+    const loadList = async () => {
+      try {
+        const storedLists = await AsyncStorage.getItem(STORAGE_KEYS.LISTS);
+        if (storedLists) {
+          const lists = JSON.parse(storedLists);
+          const currentList = lists.find((l: List) => l.id === listId);
+          if (currentList) {
+            setList(currentList);
+            // Update document title
+            document.title = `${currentList.title} - Themed Lists`;
+          }
+        }
+      } catch (error) {
+        console.error('Error loading list details:', error);
+      }
+    };
+    loadList();
+  }, [listId]);
+
+  useEffect(() => {
     if (error) {
       Alert.alert('Error', error, [{text: 'OK', onPress: clearError}]);
     }
   }, [error, clearError]);
+
+  const handleBack = () => {
+    router.back();
+  };
 
   const handleAddItem = (title: string, description?: string) => {
     addItem({
@@ -145,10 +167,15 @@ export default function ListDetailScreen() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ThemedHeader
-        title={`Collection ${listId}`}
-        subtitle={`${items.length} items · ${items.filter(i => i.completed).length} completed`}
-      />
+      <View style={styles.header}>
+        <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+          <Feather name="arrow-left" size={24} color={theme.colors.text.primary}/>
+        </TouchableOpacity>
+        <ThemedHeader
+          title={list?.title || 'Loading...'}
+          subtitle={`${items.length} items · ${items.filter(i => i.completed).length} completed`}
+        />
+      </View>
 
       <ThemedButton
         title="Add Item"
@@ -182,6 +209,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: theme.spacing.md,
+  },
+  backButton: {
+    padding: theme.spacing.sm,
+    marginRight: theme.spacing.sm,
   },
   addButton: {
     margin: theme.spacing.md,

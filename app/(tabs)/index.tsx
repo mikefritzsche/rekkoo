@@ -1,4 +1,3 @@
-// app/(tabs)/index.tsx
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
@@ -16,13 +15,19 @@ import ThemedButton from '@/components/ThemedButton';
 import ThemedCard from '@/components/ThemedCard';
 import { theme } from '@/app/theme';
 import { STORAGE_KEYS } from '@/constants';
-import {List} from "@/types";
 import { createDefaultLists, createDefaultItems } from '@/data';
-
+import type { List } from '@/types';
+import {useLists} from "@/hooks/useLists";
+import { useFocusEffect } from 'expo-router';
 
 export default function HomeScreen() {
-  const [lists, setLists] = useState<List[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { lists, isLoading, refresh } = useLists();
+
+  useFocusEffect(
+    React.useCallback(() => {
+      refresh();
+    }, [refresh])
+  );
 
   // Initialize default data
   const initializeDefaultData = async () => {
@@ -43,36 +48,6 @@ export default function HomeScreen() {
       Alert.alert('Error', 'Failed to initialize default data');
     }
   };
-
-  const loadLists = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const storedLists = await AsyncStorage.getItem(STORAGE_KEYS.LISTS);
-      if (storedLists) {
-        setLists(JSON.parse(storedLists));
-      } else {
-        await initializeDefaultData();
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to load lists');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadLists();
-  }, [loadLists]);
-
-  const gradientKeys = Object.keys(theme.colors.gradients) as Array<keyof typeof theme.colors.gradients>;
-
-  // Uncomment this useEffect to populate with default lists
-  useEffect(() => {
-    if (lists.length === 0 && !isLoading) {
-      setLists(defaultLists);
-      AsyncStorage.setItem(STORAGE_KEYS.LISTS, JSON.stringify(defaultLists));
-    }
-  }, [isLoading]);
 
   const handleCreateList = () => {
     router.push('/create');

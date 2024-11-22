@@ -6,17 +6,10 @@ import {theme} from '@/app/theme';
 import type {ListItem as ListItemType} from '@/types';
 import {router} from "expo-router";
 
-type ListItemProps = {
-  item: ListItemType;
-  onPress?: (item: ListItemType) => void;
-  onLongPress?: (item: ListItemType) => void;
-  onToggle?: (item: ListItemType) => void;
-  showDivider?: boolean;
-};
-
 const ListItem: React.FC<ListItemProps> = (
   {
     item,
+    listId,
     onPress,
     onLongPress,
     onToggle,
