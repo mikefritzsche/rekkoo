@@ -1,4 +1,5 @@
 // app/_layout.tsx
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {Stack} from 'expo-router';
 import {theme} from '@/app/theme';
 import {useState, useEffect} from 'react';
@@ -6,16 +7,23 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {STORAGE_KEYS} from '@/constants';
 import type {List} from '@/types';
 import AppTitle from "@/components/AppTitle";
+import { ApiError } from '@/types/api';
 
-// const client = new Client({
-//   user: 'admin',
-//   host: '5.78.127.128',
-//   database: 'list_thing',
-//   password: process.env.EXPO_PUBLIC_POSTGRES_PASSWORD,
-//   port: 5433,
-// });
-// client.connect();
-
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60,
+      cacheTime: 1000 * 60 * 5,
+      retry: 2,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: true,
+      useErrorBoundary: (error) => {
+        const apiError = error as ApiError;
+        return apiError.status >= 500;
+      },
+    },
+  },
+});
 export default function RootLayout() {
   const [lists, setLists] = useState<List[]>([]);
 
@@ -27,10 +35,20 @@ export default function RootLayout() {
       }
     };
     loadLists();
+
+    queryClient.setDefaultOptions({
+      mutations: {
+        onError: (error: ApiError) => {
+          // Global error handling for mutations
+          console.error(`Mutation error: ${error.message}`);
+        },
+      },
+    });
+
   }, []);
 
   return (
-    <>
+    <QueryClientProvider client={queryClient}>
       <AppTitle/>
       <Stack
         screenOptions={{
@@ -63,6 +81,6 @@ export default function RootLayout() {
           }}
         />
       </Stack>
-    </>
+    </QueryClientProvider>
   );
 }

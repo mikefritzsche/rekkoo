@@ -1,5 +1,8 @@
 const express = require('express');
-// const userRoutes = require('./routes/user.routes');
+const db = require('./config/db');
+const bcrypt = require('bcrypt');
+const saltRounds = 12;
+const userRoutes = require('./routes/user.routes');
 
 const cors = require('cors');
 const dotenv = require('dotenv');
@@ -16,7 +19,7 @@ app.use(express.json());
 app.use(express.json());
 
 // Routes
-// app.use('/api/users', userRoutes);
+app.use('/api/v1.0/users', userRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -24,9 +27,9 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: 'Something went wrong!' });
 });
 
-app.get('/', (req, res) => {
-  res.json({status: 200, message: 'Default GET route'})
-})
+app.get('/api/v1.0/health', (req, res) => {
+  res.json({ status: 'ok', message: 'Server is running' });
+});
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
