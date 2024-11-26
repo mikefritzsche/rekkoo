@@ -7,6 +7,15 @@ import {STORAGE_KEYS} from '@/constants';
 import type {List} from '@/types';
 import AppTitle from "@/components/AppTitle";
 
+// const client = new Client({
+//   user: 'admin',
+//   host: '5.78.127.128',
+//   database: 'list_thing',
+//   password: process.env.EXPO_PUBLIC_POSTGRES_PASSWORD,
+//   port: 5433,
+// });
+// client.connect();
+
 export default function RootLayout() {
   const [lists, setLists] = useState<List[]>([]);
 
