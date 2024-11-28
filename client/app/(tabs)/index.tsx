@@ -4,19 +4,14 @@ import {
   Text,
   ScrollView,
   StyleSheet,
-  Alert,
   SafeAreaView,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import ThemedHeader from '@/components/ThemedHeader';
 import ThemedButton from '@/components/ThemedButton';
 import ThemedCard from '@/components/ThemedCard';
 import { theme } from '@/app/theme';
-import { STORAGE_KEYS } from '@/constants';
-import { createDefaultLists, createDefaultItems } from '@/data';
-import type { List } from '@/types';
 import {useLists} from "@/hooks/useLists";
 import { useFocusEffect } from 'expo-router';
 
@@ -28,26 +23,6 @@ export default function HomeScreen() {
       refresh();
     }, [refresh])
   );
-
-  // Initialize default data
-  const initializeDefaultData = async () => {
-    try {
-      const listsWithIds = createDefaultLists();
-      const defaultItemsWithIds = createDefaultItems(listsWithIds);
-
-      await AsyncStorage.setItem(STORAGE_KEYS.LISTS, JSON.stringify(listsWithIds));
-
-      await Promise.all(
-        Object.entries(defaultItemsWithIds).map(([listId, items]) =>
-          AsyncStorage.setItem(STORAGE_KEYS.LIST_ITEMS(listId), JSON.stringify(items))
-        )
-      );
-
-      setLists(listsWithIds);
-    } catch (error) {
-      Alert.alert('Error', 'Failed to initialize default data');
-    }
-  };
 
   const handleCreateList = () => {
     router.push('/create');
