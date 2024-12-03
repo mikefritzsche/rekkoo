@@ -209,6 +209,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
+    ...Platform.select({
+      ios: {
+        paddingTop: 30
+      }
+    })
   },
   header: {
     flexDirection: 'row',

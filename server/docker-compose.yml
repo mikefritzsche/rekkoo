@@ -1,0 +1,60 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rekkoo-api
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      # Add other environment variables as needed
+    networks:
+      - proxy
+      - internal
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.rekkoo-api.rule=Host(`api.rekkoo.com`)"
+      - "traefik.http.routers.rekkoo-api.entrypoints=websecure"
+      - "traefik.http.routers.rekkoo-api.tls=true"
+      - "traefik.http.routers.rekkoo-api.tls.certresolver=letsencrypt"
+      - "traefik.http.services.rekkoo-api.loadbalancer.server.port=3000"
+      # HTTPS redirect
+      - "traefik.http.routers.rekkoo-api-http.rule=Host(`api.rekkoo.com`)"
+      - "traefik.http.routers.rekkoo-api-http.entrypoints=web"
+      - "traefik.http.routers.rekkoo-api-http.middlewares=https-redirect"
+      - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
+
+networks:
+  proxy:
+    external: true
+    name: proxy
+  internal:
+    driver: bridge
+#services:
+#  mikefritzsche-app-main:
+#    image: "nginx:1.23"
+#    container_name: "mikefritzsche-app-main"
+#    env_file: .env
+#    restart: "always"
+#
+#    networks:
+#      - proxy
+#      - internal
+#
+#    volumes:
+#      - /var/run/docker.sock:/var/run/docker.sock:ro
+#      - ../dist:/usr/share/nginx/html
+#      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+#
+#    labels:
+#      - "traefik.enable=true"
+#      - "traefik.docker.network=proxy"
+#      - "traefik.http.routers.mikefritzsche-app-main-secure.entrypoints=websecure"
+#      - "traefik.http.routers.mikefritzsche-app-main-secure.rule=(Host(`www.${HOST_NAME}`) || Host(`${HOST_NAME}`))"
+#
+#networks:
+#  proxy:
+#    external: true
+#  internal:
+#    external: false
+
