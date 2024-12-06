@@ -7,12 +7,14 @@ orbs:
 parameters:
   CONFIG_FILE:
     type: string
-    default: "null"
+    default: ""
+
+setup: true
 
 executors:
   python-executor:
     docker:
-      - image: circleci/python:3.9
+      - image: cimg/python:3.9
     working_directory: ~/project
 
 jobs:
@@ -29,9 +31,10 @@ workflows:
       - path-filtering/filter:
           name: determine-changes
           base-revision: main
+          config-path: .circleci/continue-config.yml
           mapping: |
-            server:.circleci/server-config.yml
-            web-portal:.circleci/web-portal-config.yml
+            server/* .circleci/server-config.yml
+            web-portal/* .circleci/web-portal-config.yml
 
       - debug-config:
           requires:
