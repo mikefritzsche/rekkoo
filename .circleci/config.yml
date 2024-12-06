@@ -7,7 +7,7 @@ orbs:
 parameters:
   CONFIG_FILE:
     type: string
-    default: null
+    default: "null"  # Ensure this is a string, not a null value.
 
 workflows:
   main:
@@ -15,16 +15,12 @@ workflows:
       - path-filtering/filter:
           name: determine-changes
           base-revision: main
-          branch: << pipeline.git.branch >>
           mapping: |
             server: .circleci/server-config.yml
             web-portal: .circleci/web-portal-config.yml
-          config-path-default: null
 
       - continuation/continue:
           name: continue-dynamic
           requires:
             - determine-changes
           configuration_path: << pipeline.parameters.CONFIG_FILE >>
-          when:
-            condition: << pipeline.parameters.CONFIG_FILE >> != "null"
