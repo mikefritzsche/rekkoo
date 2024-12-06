@@ -9,6 +9,20 @@ parameters:
     type: string
     default: "null"
 
+executors:
+  python-executor:
+    docker:
+      - image: circleci/python:3.9
+    working_directory: ~/project
+
+jobs:
+  debug-config:
+    executor: python-executor
+    steps:
+      - run:
+          name: Print CONFIG_FILE
+          command: echo "<< pipeline.parameters.CONFIG_FILE >>"
+
 workflows:
   main:
     jobs:
@@ -18,6 +32,10 @@ workflows:
           mapping: |
             server:.circleci/server-config.yml
             web-portal:.circleci/web-portal-config.yml
+
+      - debug-config:
+          requires:
+            - determine-changes
 
       - continuation/continue:
           name: continue-dynamic
