@@ -1,8 +1,8 @@
 version: 2.1
 
 orbs:
-  path-filtering: circleci/path-filtering@0.1.0
-  continuation: circleci/continuation@0.1.2
+  path-filtering: circleci/path-filtering@1.1.0
+  continuation: circleci/continuation@1.0.0
 
 workflows:
   main:
@@ -14,7 +14,6 @@ workflows:
           mapping: |
             server: .circleci/server-config.yml
             web-portal: .circleci/web-portal-config.yml
-          # If no changes are detected, avoid unnecessary continuation.
           config-path-default: null
       - continuation/continue:
           name: continue-dynamic
