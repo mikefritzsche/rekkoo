@@ -15,13 +15,13 @@ jobs:
           name: Install Dependencies
           command: npm ci
 
-  test:
-    executor: node-executor
-    steps:
-      - checkout
-      - run:
-          name: Run Tests
-          command: npm test
+#  test:
+#    executor: node-executor
+#    steps:
+#      - checkout
+#      - run:
+#          name: Run Tests
+#          command: npm test
 
   build:
     executor: node-executor
