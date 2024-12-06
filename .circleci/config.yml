@@ -11,15 +11,12 @@ parameters:
 
 setup: true
 
-executors:
-  python-executor:
-    docker:
-      - image: cimg/python:3.9
-    working_directory: ~/project
-
 jobs:
   debug-config:
-    executor: python-executor
+    executor:
+      name: docker
+      docker:
+        - image: cimg/python:3.9
     steps:
       - run:
           name: Print CONFIG_FILE
@@ -32,9 +29,8 @@ workflows:
           name: determine-changes
           base-revision: main
           mapping: |
-            ^server/.* "server-config"
-            ^web-portal/.* "web-portal-config"
-          config-path: .circleci/${CONFIG_FILE}.yml
+            server/.* .circleci/server-config.yml true
+            web-portal/.* .circleci/web-portal-config.yml true
 
       - debug-config:
           requires:
