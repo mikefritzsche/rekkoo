@@ -4,6 +4,11 @@ orbs:
   path-filtering: circleci/path-filtering@1.1.0
   continuation: circleci/continuation@1.0.0
 
+parameters:
+  CONFIG_FILE:
+    type: string
+    default: null
+
 workflows:
   main:
     jobs:
@@ -15,8 +20,7 @@ workflows:
             server: .circleci/server-config.yml
             web-portal: .circleci/web-portal-config.yml
           config-path-default: null
-          outputs:
-            CONFIG_FILE: << pipeline.parameters.CONFIG_FILE >>
+
       - continuation/continue:
           name: continue-dynamic
           requires:
