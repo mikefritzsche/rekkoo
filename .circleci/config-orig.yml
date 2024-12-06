@@ -1,0 +1,73 @@
+version: 2.1
+
+setup: true
+
+executors:
+  node-executor:
+    docker:
+      - image: circleci/node:18.16
+    working_directory: ~/repo
+
+  docker-executor:
+    docker:
+      - image: docker:24.0.2
+        auth:
+          username: $DOCKER_USERNAME
+          password: $DOCKER_PASSWORD
+      - image: docker:24.0.2-dind
+
+commands:
+  filter-paths:
+    description: Determine which projects were modified.
+    steps:
+      - checkout
+      - run:
+          name: Filter Changed Paths
+          command: |
+            echo "Checking changes..."
+            CHANGED_FILES=$(git diff --name-only origin/main)
+            echo "$CHANGED_FILES" > changed_files.txt
+            if grep -q "^client/" changed_files.txt; then
+              echo 'export CLIENT_CHANGED=true' >> $BASH_ENV
+            fi
+            if grep -q "^server/" changed_files.txt; then
+              echo 'export SERVER_CHANGED=true' >> $BASH_ENV
+            fi
+      - run:
+          name: Output Results
+          command: |
+            echo "Client Changed: $CLIENT_CHANGED"
+            echo "Server Changed: $SERVER_CHANGED"
+      - persist_to_workspace:
+          root: ~/repo
+          paths:
+            - changed_files.txt
+
+jobs:
+  setup:
+    executor: node-executor
+    steps:
+      - checkout
+      - filter-paths
+      - run:
+          name: Generate Dynamic Configurations
+          command: |
+            CONFIG='{ "version": 2.1, "workflows": { "dynamic": { "jobs": [] } } }'
+
+            if [ "$CLIENT_CHANGED" == "true" ]; then
+              CONFIG=$(echo $CONFIG | jq '.workflows.dynamic.jobs += ["client-workflow"]')
+            fi
+
+            if [ "$SERVER_CHANGED" == "true" ]; then
+              CONFIG=$(echo $CONFIG | jq '.workflows.dynamic.jobs += ["server-workflow"]')
+            fi
+
+            echo $CONFIG > .circleci/dynamic-config.json
+      - continuation:
+          configuration_path: ".circleci/dynamic-config.json"
+
+workflows:
+  version: 2
+  setup:
+    jobs:
+      - setup

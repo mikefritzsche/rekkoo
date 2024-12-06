@@ -1,0 +1,25 @@
+version: 2.1
+
+orbs:
+  path-filtering: circleci/path-filtering@0.3.0
+  continuation: circleci/continuation@0.1.2
+
+workflows:
+  main:
+    jobs:
+      - path-filtering/filter:
+          name: determine-changes
+          base-revision: main
+          branch: << pipeline.git.branch >>
+          mapping: |
+            server: .circleci/server-config.yml
+            web-portal: .circleci/web-portal-config.yml
+          # If no changes are detected, avoid unnecessary continuation.
+          config-path-default: null
+      - continuation/continue:
+          name: continue-dynamic
+          requires:
+            - determine-changes
+          configuration_path: << pipeline.parameters.CONFIG_FILE >>
+          when:
+            condition: << pipeline.parameters.CONFIG_FILE >> != "null"

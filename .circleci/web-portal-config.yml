@@ -1,0 +1,43 @@
+version: 2.1
+
+executors:
+  node-executor:
+    docker:
+      - image: circleci/node:18.16
+    working_directory: ~/repo/web-portal
+
+jobs:
+  install:
+    executor: node-executor
+    steps:
+      - checkout
+      - run:
+          name: Install Dependencies
+          command: npm ci
+
+  test:
+    executor: node-executor
+    steps:
+      - checkout
+      - run:
+          name: Run Tests
+          command: npm test
+
+  build:
+    executor: node-executor
+    steps:
+      - checkout
+      - run:
+          name: Build Web Portal
+          command: npm run build
+
+workflows:
+  web-portal-workflow:
+    jobs:
+      - install
+      - test:
+          requires:
+            - install
+      - build:
+          requires:
+            - test

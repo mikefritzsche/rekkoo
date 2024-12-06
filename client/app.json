@@ -1,8 +1,9 @@
 {
   "expo": {
-    "name": "list-thing-test",
-    "slug": "list-thing-test",
+    "name": "rekkoo",
+    "slug": "rekkoo",
     "version": "1.0.0",
+    "platforms": ["ios", "android", "web"],
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
@@ -20,7 +21,7 @@
     },
     "web": {
       "bundler": "metro",
-      "output": "static",
+      "output": "server",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
