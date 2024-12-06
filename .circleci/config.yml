@@ -31,10 +31,9 @@ workflows:
       - path-filtering/filter:
           name: determine-changes
           base-revision: main
-          config-path: .circleci/continue-config.yml
           mapping: |
-            server/* .circleci/server-config.yml
-            web-portal/* .circleci/web-portal-config.yml
+            server/.* = .circleci/server-config.yml
+            web-portal/.* = .circleci/web-portal-config.yml
 
       - debug-config:
           requires:
