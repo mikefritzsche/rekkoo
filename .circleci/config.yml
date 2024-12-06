@@ -32,8 +32,9 @@ workflows:
           name: determine-changes
           base-revision: main
           mapping: |
-            server/.* = .circleci/server-config.yml
-            web-portal/.* = .circleci/web-portal-config.yml
+            ^server/.* "server-config"
+            ^web-portal/.* "web-portal-config"
+          config-path: .circleci/${CONFIG_FILE}.yml
 
       - debug-config:
           requires:
