@@ -7,7 +7,7 @@ orbs:
 parameters:
   CONFIG_FILE:
     type: string
-    default: "null"  # Ensure this is a string, not a null value.
+    default: "null"
 
 workflows:
   main:
@@ -16,8 +16,8 @@ workflows:
           name: determine-changes
           base-revision: main
           mapping: |
-            server: .circleci/server-config.yml
-            web-portal: .circleci/web-portal-config.yml
+            server:.circleci/server-config.yml
+            web-portal:.circleci/web-portal-config.yml
 
       - continuation/continue:
           name: continue-dynamic
