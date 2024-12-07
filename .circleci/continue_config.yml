@@ -1,0 +1,37 @@
+version: 2.1
+
+parameters:
+  server-config:
+    type: boolean
+    default: false
+  web-portal-config:
+    type: boolean
+    default: false
+
+jobs:
+  debug-config:
+    docker:
+      - image: cimg/python:3.9
+    steps:
+      - checkout
+      - run:
+          name: Print Config Status
+          command: |
+            echo "Server config triggered: << pipeline.parameters.server-config >>"
+            echo "Web portal config triggered: << pipeline.parameters.web-portal-config >>"
+
+workflows:
+  version: 2
+  continue:
+    when: << pipeline.parameters.server-config >> || << pipeline.parameters.web-portal-config >>
+    jobs:
+      - when:
+          condition: << pipeline.parameters.server-config >>
+          steps:
+            - continuation/continue:
+                configuration_path: .circleci/server-config.yml
+      - when:
+          condition: << pipeline.parameters.web-portal-config >>
+          steps:
+            - continuation/continue:
+                configuration_path: .circleci/web-portal-config.yml

@@ -4,25 +4,7 @@ orbs:
   path-filtering: circleci/path-filtering@1.1.0
   continuation: circleci/continuation@1.0.0
 
-parameters:
-  CONFIG_FILE:
-    type: string
-    default: ""
-
 setup: true
-
-executors:
-  python-exec:
-    docker:
-      - image: cimg/python:3.9
-
-jobs:
-  debug-config:
-    executor: python-exec
-    steps:
-      - run:
-          name: Print CONFIG_FILE
-          command: echo "<< pipeline.parameters.CONFIG_FILE >>"
 
 workflows:
   main:
@@ -30,16 +12,7 @@ workflows:
       - path-filtering/filter:
           name: determine-changes
           base-revision: main
+          config-path: .circleci/continue_config.yml
           mapping: |
-            server/.* .circleci/server-config.yml true
-            web-portal/.* .circleci/web-portal-config.yml true
-
-      - debug-config:
-          requires:
-            - determine-changes
-
-      - continuation/continue:
-          name: continue-dynamic
-          requires:
-            - determine-changes
-          configuration_path: << pipeline.parameters.CONFIG_FILE >>
+            server/.* server-config
+            web-portal/.* web-portal-config
