@@ -3,6 +3,7 @@ version: 2.1
 orbs:
   path-filtering: circleci/path-filtering@1.1.0
   continuation: circleci/continuation@1.0.0
+  slack: circleci/slack@4.13.1
 
 setup: true
 
@@ -11,8 +12,18 @@ workflows:
     jobs:
       - path-filtering/filter:
           name: determine-changes
+          context: slack-secrets
           base-revision: main
           config-path: .circleci/continue_config.yml
           mapping: |
             server/.* run_server true
             web-portal/.* run_web_portal true
+          post-steps:
+            - slack/notify:
+                event: fail
+                template: basic_fail_1
+                channel: circleci-notifications
+            - slack/notify:
+                event: pass
+                template: basic_success_1
+                channel: circleci-notifications

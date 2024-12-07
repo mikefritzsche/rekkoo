@@ -1,5 +1,8 @@
 version: 2.1
 
+orbs:
+  slack: circleci/slack@4.13.1
+
 parameters:
   run_server:
     type: boolean
@@ -7,6 +10,43 @@ parameters:
   run_web_portal:
     type: boolean
     default: false
+
+commands:
+  notify-slack-status:
+    parameters:
+      service:
+        type: string
+    steps:
+      - slack/notify:
+          event: fail
+          template: basic_fail_1
+          custom: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "❌ *<< parameters.service >>* build failed on branch: $CIRCLE_BRANCH\n\n*Build URL:* $CIRCLE_BUILD_URL"
+                  }
+                }
+              ]
+            }
+      - slack/notify:
+          event: pass
+          template: basic_success_1
+          custom: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "✅ *<< parameters.service >>* build succeeded on branch: $CIRCLE_BRANCH\n\n*Build URL:* $CIRCLE_BUILD_URL"
+                  }
+                }
+              ]
+            }
 
 jobs:
   debug-config:
@@ -18,17 +58,29 @@ jobs:
           command: |
             echo "Server triggered: << pipeline.parameters.run_server >>"
             echo "Web Portal triggered: << pipeline.parameters.run_web_portal >>"
+      - notify-slack-status:
+          service: "Config Status Check"
 
 workflows:
   run-configs:
     jobs:
+      - debug-config:
+          context: slack-secrets
       - when:
           condition: << pipeline.parameters.run_server >>
           steps:
             - continuation/continue:
+                context: slack-secrets
                 configuration_path: .circleci/server-config.yml
+                post-steps:
+                  - notify-slack-status:
+                      service: "Server Build"
       - when:
           condition: << pipeline.parameters.run_web_portal >>
           steps:
             - continuation/continue:
+                context: slack-secrets
                 configuration_path: .circleci/web-portal-config.yml
+                post-steps:
+                  - notify-slack-status:
+                      service: "Web Portal Build"
