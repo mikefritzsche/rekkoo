@@ -1,10 +1,12 @@
-# .circleci/continue_config.yml
 version: 2.1
 
 parameters:
-  CONFIG_FILE:
-    type: string
-    default: ""
+  run_server:
+    type: boolean
+    default: false
+  run_web_portal:
+    type: boolean
+    default: false
 
 jobs:
   debug-config:
@@ -12,16 +14,21 @@ jobs:
       - image: cimg/python:3.9
     steps:
       - run:
-          name: Print Config File
+          name: Print Config Status
           command: |
-            echo "Using config file: << pipeline.parameters.CONFIG_FILE >>"
+            echo "Server triggered: << pipeline.parameters.run_server >>"
+            echo "Web Portal triggered: << pipeline.parameters.run_web_portal >>"
 
 workflows:
-  run-config:
-    when:
-      not:
-        equal: [ "", << pipeline.parameters.CONFIG_FILE >> ]
+  run-configs:
     jobs:
-      - debug-config
-      - continuation/continue:
-          configuration_path: << pipeline.parameters.CONFIG_FILE >>
+      - when:
+          condition: << pipeline.parameters.run_server >>
+          steps:
+            - continuation/continue:
+                configuration_path: .circleci/server-config.yml
+      - when:
+          condition: << pipeline.parameters.run_web_portal >>
+          steps:
+            - continuation/continue:
+                configuration_path: .circleci/web-portal-config.yml
