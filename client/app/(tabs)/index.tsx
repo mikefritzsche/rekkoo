@@ -32,7 +32,7 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.container}>
         <ThemedHeader
-          title="My Lists"
+          title="Rekkoo"
           subtitle={`${lists.length} lists`}
         />
 

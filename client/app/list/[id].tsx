@@ -112,8 +112,10 @@ export default function ListDetailScreen() {
           const currentList = lists.find((l: List) => l.id === listId);
           if (currentList) {
             setList(currentList);
-            // Update document title
-            document.title = `${currentList.title} - Themed Lists`;
+            // Check if we're in a web environment before accessing document
+            if (typeof document !== 'undefined') {
+              document.title = `${currentList.title} - Themed Lists`;
+            }
           }
         }
       } catch (error) {
